@@ -1,0 +1,24 @@
+{
+  "name": "blaze_graph",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^4.10.1",
+    "hyper-express": "^6.5.7",
+    "playwright": "^1.31.1",
+    "socket.io": "^4.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "prisma": "^4.10.1",
+    "sucrase": "^3.29.0",
+    "typescript": "^4.9.5"
+  }
+}
