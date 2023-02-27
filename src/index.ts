@@ -3,13 +3,16 @@ import { Server as IO } from "socket.io"
 import { Scrapper } from "./scrapper"
 import { PrismaClient } from "@prisma/client"
 import { readFile } from "fs/promises"
+import { readFileSync } from "fs"
 
 const prisma = new PrismaClient()
 
 const app = new Server()
 
+const html = readFileSync("./src/index.html")
+
 app.get("/", async (_req, res) => {
-  res.send(await readFile("./src/index.html"))
+  res.send(html)
 })
 
 app.get("/entries", async (req, res) => {
