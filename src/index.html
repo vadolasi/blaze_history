@@ -92,6 +92,22 @@
         font-family: Arial, Helvetica, sans-serif;
         font-size: large;
       }
+
+      #stats {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 100px;
+        width: 100%;
+      }
+
+      #stats span {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: large;
+        margin: 10px;
+        color: #000;
+      }
     </style>
     <title>Gráfico</title>
   </head>
@@ -110,13 +126,18 @@
         <input type="number" min="0" step="1" placeholder="Número de giros" id="quantity" name="quantity" value="100" />
         <button id="filter">Filtrar</button>
       </div>
+      <div id="stats">
+        <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
+        <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
+        <span>Porcentagem de vitórias: <span id="winsPercentage"></span></span>
+      </div>
       <div id="history"></div>
     </div>
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
 
       function addRound(win) {
-        history.innerHTML += `<img src="/images/${win ? "win" : "loss"}.webp" width="100" height="100" />`
+        history.innerHTML += `<img src="/images/${win ? "win" : "loss"}.webp" width="100" height="50" />`
       }
 
       let red = 0
@@ -133,6 +154,35 @@
         })
           .then(response => response.json())
           .then(entries => {
+            const wins = entries.filter(entry => entry === true).length
+            const winsPercentage = wins / entries.length * 100
+            let maxConsecutiveWins = 0
+            let consecutiveWins = 0
+            entries.forEach(entry => {
+              if (entry) {
+                consecutiveWins++
+              } else {
+                if (consecutiveWins > maxConsecutiveWins) {
+                  maxConsecutiveWins = consecutiveWins
+                }
+                consecutiveWins = 0
+              }
+            })
+            let maxConsecutiveLosses = 0
+            let consecutiveLosses = 0
+            entries.forEach(entry => {
+              if (!entry) {
+                consecutiveLosses++
+              } else {
+                if (consecutiveLosses > maxConsecutiveLosses) {
+                  maxConsecutiveLosses = consecutiveLosses
+                }
+                consecutiveLosses = 0
+              }
+            })
+            document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
+            document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
+            document.getElementById("winsPercentage").innerText = `${winsPercentage.toFixed(2)}%`
             history.innerHTML = ""
             entries.forEach(addRound)
           })
