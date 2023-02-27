@@ -1,22 +1,28 @@
 import { Server } from "hyper-express"
-import { readFileSync } from "fs"
 import { Server as IO } from "socket.io"
 import { Scrapper } from "./scrapper"
 import { PrismaClient } from "@prisma/client"
+import { readFile } from "fs/promises"
 
 const prisma = new PrismaClient()
-
-const html = readFileSync("./src/index.html", "utf8")
 
 const app = new Server()
 
 app.get("/", async (_req, res) => {
-  res.send(html)
+  res.send(await readFile("./src/index.html"))
 })
 
-app.get("/entries", async (_req, res) => {
-  const entries = await prisma.entry.findMany()
+app.get("/entries", async (req, res) => {
+  const quantity = Number(req.query.quantity)
+  const entries = await prisma.entry.findMany({ take: quantity })
   res.json(entries.map(entry => entry.win))
+})
+
+app.get("/images/:name", async (req, res) => {
+  const name = req.params.name
+
+  res.setHeader("Content-Type", "image/webp")
+  res.send(await readFile(`./src/images/${name}`))
 })
 
 const io = new IO()
@@ -36,16 +42,21 @@ io.on("connection", (socket) => {
   await app.listen(3000)
   console.log("Listening on port 3000")
 
-  scrapper.listen(async (red, black, win) => {
-    io.emit("run", { red, black, win })
-    await prisma.entry.create({
-      data: {
-        red,
-        black,
-        win
-      }
-    })
-  })
+  scrapper.listen(
+    async (red, black, win) => {
+      io.emit("result", { red, black, win })
+      await prisma.entry.create({
+        data: {
+          red,
+          black,
+          win
+        }
+      })
+    },
+    (red, black) => {
+      io.emit("graph", { red, black })
+    }
+  )
 })()
 
 app.listen(3000)

@@ -60,7 +60,7 @@ export class Scrapper {
       return block_resources.includes(route.request().resourceType())
         ? route.abort()
         : route.continue()
-    });
+    })
     await this.page.goto("https://blaze.com/pt/games/double")
   }
 
@@ -80,7 +80,20 @@ export class Scrapper {
     return Number(total.split(" ")[0])
   }
 
-  async listen(callback: (red: number, black: number, win: boolean) => void) {
+  async listen(callback: (red: number, black: number, win: boolean) => void, onGraph: (red: number, black: number) => void) {
+    this.page.exposeFunction("onGraph", onGraph)
+
+    this.page.evaluate(() => {
+      const red = document.querySelector("div.col-md-4.col-xs-12.margin-xs.left div.total > div:nth-child(1)")
+      const black = document.querySelector("div.col-md-4.col-xs-12.right div.total > div:nth-child(1)")
+
+      new MutationObserver(() => {
+        const redNumber = Number(red!.textContent!.split(" ")[0])
+        const blackNumber = Number(black!.textContent!.split(" ")[0])
+        onGraph(redNumber, blackNumber)
+      }).observe(red!, { characterData: true, childList: true, subtree: true })
+    })
+
     while (true) {
       const element = await this.page.waitForSelector("div.time-left:text(\"Blaze Girou\")", { timeout: 60000 })
       const text = await element.textContent()
@@ -93,7 +106,7 @@ export class Scrapper {
         let win: boolean
 
         if (number === 0) {
-          win = false
+          win = true
         } else if (red > black && number <= 7) {
           win = true
         } else if (red < black && number > 7) {

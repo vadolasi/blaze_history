@@ -17,38 +17,80 @@
 
       #history {
         display: flex;
-        flex-direction: column;
+        flex-direction: row-reverse;
+        flex-wrap: wrap;
+        justify-content: space-around;
         width: 100%;
         height: 100%;
         overflow-y: auto;
+        gap: 10px;
+        padding: 30px;
       }
 
       #content {
         display: flex;
+        flex-direction: column;
         height: 100%;
       }
 
       #red {
-        width: 100%;
+        height: 100%;
         background-color: red;
+        width: 50%;
       }
 
       #black {
-        width: 100%;
+        height: 100%;
         background-color: black;
+        width: 50%;
       }
 
       span {
         display: block;
         color: white;
         font-family: Arial, Helvetica, sans-serif;
+        margin: 10px;
+        font-size: large;
       }
 
       #result {
         display: flex;
-        flex-direction: column;
-        width: 100px;
+        width: 100%;
+        height: 100px;
+      }
+
+      button {
+        margin: 10px;
+        padding: 10px;
+        border: none;
+        background-color: #000;
+        color: #fff;
+        font-size: large;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      input {
+        margin: 10px;
+        padding: 10px;
+        border: 1px solid #000;
+        background-color: #fff;
+        color: #000;
+        font-size: large;
+        border-radius: 5px;
+      }
+
+      .inputs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         height: 100%;
+        width: 100%;
+      }
+
+      label {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: large;
       }
     </style>
     <title>Gráfico</title>
@@ -57,34 +99,50 @@
     <div id="content">
       <div id="result">
         <div id="red">
-          <span></span>
+          <span>50%</span>
         </div>
         <div id="black">
-          <span></span>
+          <span>50%</span>
         </div>
+      </div>
+      <div id="inputs">
+        <label for="quantity">Número de giros:</label>
+        <input type="number" min="0" step="1" placeholder="Número de giros" id="quantity" name="quantity" value="100" />
+        <button id="filter">Filtrar</button>
       </div>
       <div id="history"></div>
     </div>
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
 
-      const history = document.getElementById("history")
+      function addRound(win) {
+        history.innerHTML += `<img src="/images/${win ? "win" : "loss"}.webp" width="100" height="100" />`
+      }
 
-      fetch("/entries", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-        .then(response => response.json())
-        .then(entries => {
-          entries.forEach(win => {
-            const div = document.createElement("div")
-            div.innerText = win ? "win" : "loss"
+      let red = 0
+      let black = 0
 
-            history.appendChild(div)
-          })
+      function filter() {
+        const quantity = document.getElementById("quantity").value
+
+        fetch(`/entries?quantity=${quantity}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
         })
+          .then(response => response.json())
+          .then(entries => {
+            history.innerHTML = ""
+            entries.forEach(addRound)
+          })
+      }
+
+      filter()
+
+      document.getElementById("filter").addEventListener("click", filter)
+
+      const history = document.getElementById("history")
 
       const socket = io()
 
@@ -96,19 +154,19 @@
         console.log("Desconectado")
       })
 
-      socket.on("run", ({ red, black, win }) => {
+      socket.on("graph", ({ red, black, win }) => {
         const redPercent = red / (red + black) * 100
         const blackPercent = black / (red + black) * 100
 
         document.querySelector("#red span").innerText = `${redPercent.toFixed(2)}%`
         document.querySelector("#black span").innerText = `${blackPercent.toFixed(2)}%`
 
-        document.querySelector("#red").style.height = `${redPercent}%`
-        document.querySelector("#black").style.height = `${blackPercent}%`
+        document.querySelector("#red").style.width = `${redPercent}%`
+        document.querySelector("#black").style.width = `${blackPercent}%`
+      })
 
-        const div = document.createElement("div")
-        div.innerText = win ? "win" : "loss"
-        history.appendChild(div)
+      socket.on("result", ({ win }) => {
+        addRound(win)
       })
     </script>
   </body>
