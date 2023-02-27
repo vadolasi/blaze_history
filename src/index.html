@@ -123,8 +123,10 @@
       </div>
       <div id="inputs">
         <label for="quantity">Número de giros:</label>
-        <input type="number" min="0" step="1" placeholder="Número de giros" id="quantity" name="quantity" value="100" />
+        <input type="number" min="0" step="1" id="quantity" name="quantity" value="100" />
         <button id="filter">Filtrar</button>
+        <label for="beep">Alerta sonoro: </label>
+        <input type="number" min="0" step="1" id="beep" name="beep" value="7" />
       </div>
       <div id="stats">
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
@@ -143,8 +145,45 @@
       let red = 0
       let black = 0
 
+      function mountEntries(entries) {
+        entriesSaved = entries
+        const wins = entries.filter(entry => entry === true).length
+        const winsPercentage = wins / entries.length * 100
+        let maxConsecutiveWins = 0
+        let consecutiveWins = 0
+        entries.forEach(entry => {
+          if (entry) {
+            consecutiveWins++
+          } else {
+            if (consecutiveWins > maxConsecutiveWins) {
+              maxConsecutiveWins = consecutiveWins
+            }
+            consecutiveWins = 0
+          }
+        })
+        let maxConsecutiveLosses = 0
+        let consecutiveLosses = 0
+        entries.forEach(entry => {
+          if (!entry) {
+            consecutiveLosses++
+          } else {
+            if (consecutiveLosses > maxConsecutiveLosses) {
+              maxConsecutiveLosses = consecutiveLosses
+            }
+            consecutiveLosses = 0
+          }
+        })
+        document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
+        document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
+        document.getElementById("winsPercentage").innerText = `${winsPercentage.toFixed(2)}%`
+        history.innerHTML = ""
+        entries.forEach(addRound)
+      }
+
       function filter() {
         const quantity = document.getElementById("quantity").value
+
+        let entriesSaved = []
 
         fetch(`/entries?quantity=${quantity}`, {
           method: "GET",
@@ -153,39 +192,7 @@
           }
         })
           .then(response => response.json())
-          .then(entries => {
-            const wins = entries.filter(entry => entry === true).length
-            const winsPercentage = wins / entries.length * 100
-            let maxConsecutiveWins = 0
-            let consecutiveWins = 0
-            entries.forEach(entry => {
-              if (entry) {
-                consecutiveWins++
-              } else {
-                if (consecutiveWins > maxConsecutiveWins) {
-                  maxConsecutiveWins = consecutiveWins
-                }
-                consecutiveWins = 0
-              }
-            })
-            let maxConsecutiveLosses = 0
-            let consecutiveLosses = 0
-            entries.forEach(entry => {
-              if (!entry) {
-                consecutiveLosses++
-              } else {
-                if (consecutiveLosses > maxConsecutiveLosses) {
-                  maxConsecutiveLosses = consecutiveLosses
-                }
-                consecutiveLosses = 0
-              }
-            })
-            document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
-            document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
-            document.getElementById("winsPercentage").innerText = `${winsPercentage.toFixed(2)}%`
-            history.innerHTML = ""
-            entries.forEach(addRound)
-          })
+          .then(mountEntries)
       }
 
       filter()
@@ -217,6 +224,15 @@
 
       socket.on("result", ({ win }) => {
         addRound(win)
+        entriesSaved.push(win)
+        mountEntries(entriesSaved)
+        const lastEntries = entriesSaved.slice(-Number(document.getElementById("beep").value))
+        const lastEntry = entriesSaved[entriesSaved.length - 1]
+        const lastEntriesAreEqual = lastEntries.every(entry => entry === lastEntry)
+        if (lastEntriesAreEqual) {
+          const audio = new Audio("/images/beep.mp3")
+          audio.play()
+        }
       })
     </script>
   </body>
