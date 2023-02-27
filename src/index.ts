@@ -50,8 +50,8 @@ io.on("connection", (socket) => {
       io.emit("result", { red, black, win })
       await prisma.entry.create({
         data: {
-          red,
-          black,
+          red: Math.round(red),
+          black: Math.round(black),
           win
         }
       })
