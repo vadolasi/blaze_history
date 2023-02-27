@@ -145,6 +145,8 @@
       let red = 0
       let black = 0
 
+      let entriesSaved = []
+
       function mountEntries(entries) {
         entriesSaved = entries
         const wins = entries.filter(entry => entry === true).length
@@ -182,8 +184,6 @@
 
       function filter() {
         const quantity = document.getElementById("quantity").value
-
-        let entriesSaved = []
 
         fetch(`/entries?quantity=${quantity}`, {
           method: "GET",
