@@ -57,7 +57,12 @@ io.on("connection", (socket) => {
 
   scrapper.listen(
     async (white, win) => {
-
+      await prisma.entry.create({
+        data: {
+          white,
+          win
+        }
+      })
       io.emit("result", { white, win })
     },
     (red, black) => {
