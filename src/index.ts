@@ -17,7 +17,15 @@ app.get("/", async (_req, res) => {
 
 app.get("/entries", async (req, res) => {
   const quantity = Number(req.query.quantity)
-  const entries = await prisma.entry.findMany({ take: quantity })
+  const entries = await prisma.entry.findMany({
+    take: quantity,
+    orderBy: {
+      id: "desc"
+    }
+  })
+
+  entries.reverse()
+
   res.json(entries)
 })
 
@@ -47,12 +55,7 @@ io.on("connection", (socket) => {
 
   scrapper.listen(
     async (white, win) => {
-      await prisma.entry.create({
-        data: {
-          white,
-          win
-        }
-      })
+
       io.emit("result", { white, win })
     },
     (red, black) => {
