@@ -17,8 +17,6 @@ app.get("/", async (_req, res) => {
 
 app.get("/entries", async (req, res) => {
   const quantity = Number(req.query.quantity)
-  const total = await prisma.entry.count()
-  console.log(total)
   const entries = await prisma.entry.findMany({
     take: quantity,
     orderBy: {
