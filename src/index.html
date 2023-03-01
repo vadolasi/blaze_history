@@ -138,8 +138,8 @@
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
 
-      function addRound(win) {
-        history.innerHTML += `<img src="/images/${win ? "win" : "loss"}.webp" width="100" height="50" />`
+      function addRound(win, white) {
+        history.innerHTML += `<img src="/images/${win ? white ? "white" : "win" : "loss"}.webp" width="100" height="50" />`
       }
 
       let red = 0
@@ -149,12 +149,12 @@
 
       function mountEntries(entries) {
         entriesSaved = entries
-        const wins = entries.filter(entry => entry === true).length
+        const wins = entries.filter(entry => entry.win === true).length
         const winsPercentage = wins / entries.length * 100
         let maxConsecutiveWins = 0
         let consecutiveWins = 0
         entries.forEach(entry => {
-          if (entry) {
+          if (entry.win) {
             consecutiveWins++
           } else {
             if (consecutiveWins > maxConsecutiveWins) {
@@ -166,7 +166,7 @@
         let maxConsecutiveLosses = 0
         let consecutiveLosses = 0
         entries.forEach(entry => {
-          if (!entry) {
+          if (!entry.win) {
             consecutiveLosses++
           } else {
             if (consecutiveLosses > maxConsecutiveLosses) {
@@ -179,7 +179,7 @@
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
         document.getElementById("winsPercentage").innerText = `${winsPercentage.toFixed(2)}%`
         history.innerHTML = ""
-        entries.forEach(addRound)
+        entries.forEach(({ win, white }) => addRound(win, white))
       }
 
       function filter() {
@@ -211,7 +211,7 @@
         console.log("Desconectado")
       })
 
-      socket.on("graph", ({ red, black, win }) => {
+      socket.on("graph", ({ red, black }) => {
         const redPercent = red / (red + black) * 100
         const blackPercent = black / (red + black) * 100
 
@@ -222,13 +222,13 @@
         document.querySelector("#black").style.width = `${blackPercent}%`
       })
 
-      socket.on("result", ({ win }) => {
-        addRound(win)
-        entriesSaved.push(win)
+      socket.on("result", ({ white, win }) => {
+        addRound(win, white)
+        entriesSaved.push({ white, win })
         mountEntries(entriesSaved)
         const lastEntries = entriesSaved.slice(-Number(document.getElementById("beep").value))
-        const lastEntry = entriesSaved[entriesSaved.length - 1]
-        const lastEntriesAreEqual = lastEntries.every(entry => entry === lastEntry)
+        const lastEntry = entriesSaved[entriesSaved.length - 1].win
+        const lastEntriesAreEqual = lastEntries.every(entry => entry.win === lastEntry)
         if (lastEntriesAreEqual) {
           const audio = new Audio("/images/beep.mp3")
           audio.play()

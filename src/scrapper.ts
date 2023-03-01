@@ -80,7 +80,7 @@ export class Scrapper {
     return Number(total.split(" ")[0])
   }
 
-  async listen(callback: (red: number, black: number, win: boolean) => void, onGraph: (red: number, black: number) => void) {
+  async listen(callback: (white: boolean, win: boolean) => void, onGraph: (red: number, black: number) => void) {
     this.page.exposeFunction("onGraph", onGraph)
 
     this.page.evaluate(() => {
@@ -103,19 +103,19 @@ export class Scrapper {
       const black = await this.getBlackValue()
 
       if (red && black) {
-        let win: boolean
+        let win = false
+        let white = false
 
         if (number === 0) {
+          white = true
           win = true
         } else if (red > black && number <= 7) {
           win = true
         } else if (red < black && number > 7) {
           win = true
-        } else {
-          win = false
         }
 
-        callback(red, black, win)
+        callback(white, win)
       }
 
       await this.page.waitForTimeout(10000)

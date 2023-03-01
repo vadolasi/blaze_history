@@ -18,7 +18,7 @@ app.get("/", async (_req, res) => {
 app.get("/entries", async (req, res) => {
   const quantity = Number(req.query.quantity)
   const entries = await prisma.entry.findMany({ take: quantity })
-  res.json(entries.map(entry => entry.win))
+  res.json(entries)
 })
 
 app.get("/images/:name", async (req, res) => {
@@ -46,12 +46,11 @@ io.on("connection", (socket) => {
   console.log("Listening on port 3000")
 
   scrapper.listen(
-    async (red, black, win) => {
-      io.emit("result", { red, black, win })
+    async (white, win) => {
+      io.emit("result", { white, win })
       await prisma.entry.create({
         data: {
-          red: Math.round(red),
-          black: Math.round(black),
+          white,
           win
         }
       })
