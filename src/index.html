@@ -45,6 +45,18 @@
         width: 50%;
       }
 
+      #win {
+        height: 100%;
+        background-color: green;
+        width: 50%;
+      }
+
+      #loss {
+        height: 100%;
+        background-color: red;
+        width: 50%;
+      }
+
       span {
         display: block;
         color: white;
@@ -53,7 +65,7 @@
         font-size: large;
       }
 
-      #result {
+      .result {
         display: flex;
         width: 100%;
         height: 100px;
@@ -113,7 +125,7 @@
   </head>
   <body>
     <div id="content">
-      <div id="result">
+      <div class="result">
         <div id="red">
           <span>50%</span>
         </div>
@@ -131,7 +143,14 @@
       <div id="stats">
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
-        <span>Porcentagem de vitórias: <span id="winsPercentage"></span></span>
+      </div>
+      <div class="result">
+        <div id="win">
+          <span>50%</span>
+        </div>
+        <div id="loss">
+          <span>50%</span>
+        </div>
       </div>
       <div id="history"></div>
     </div>
@@ -177,9 +196,14 @@
         })
         document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
-        document.getElementById("winsPercentage").innerText = `${winsPercentage.toFixed(2)}%`
         history.innerHTML = ""
         entries.forEach(({ win, white }) => addRound(win, white))
+
+        document.querySelector("#win span").innerText = `${winsPercentage.toFixed(2)}%`
+        document.querySelector("#loss span").innerText = `${(100 - winsPercentage).toFixed(2)}%`
+
+        document.querySelector("#win").style.width = `${winsPercentage}%`
+        document.querySelector("#loss").style.width = `${100 - winsPercentage}%`
       }
 
       function filter() {
