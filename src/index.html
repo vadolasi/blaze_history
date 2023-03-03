@@ -133,7 +133,7 @@
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
       </div>
-      <div style="height: 300px">
+      <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
         <canvas id="graph"></canvas>
       </div>
       <div id="history"></div>
@@ -149,6 +149,8 @@
       let black = 0
 
       let entriesSaved = []
+
+      let previousChart = null
 
       function mountEntries(entries) {
         entriesSaved = entries
@@ -195,7 +197,11 @@
 
         const ctx = document.getElementById("graph")
 
-        const chart = new Chart(ctx, {
+        if (previousChart) {
+          previousChart.destroy()
+        }
+
+        previousChart = new Chart(ctx, {
           type: "line",
           responsive: true,
           maintainAspectRatio: false,
