@@ -181,12 +181,6 @@
         history.innerHTML = ""
         entries.forEach(({ win, white }) => addRound(win, white))
 
-        document.querySelector("#win span").innerText = `${winsPercentage.toFixed(2)}%`
-        document.querySelector("#loss span").innerText = `${(100 - winsPercentage).toFixed(2)}%`
-
-        document.querySelector("#win").style.width = `${winsPercentage}%`
-        document.querySelector("#loss").style.width = `${100 - winsPercentage}%`
-
         let total = 0
 
         const chartData = entries.map((entry, index) => {
