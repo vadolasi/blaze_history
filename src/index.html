@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       html, body {
         height: 100%;
@@ -124,7 +125,6 @@
     </div>
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
-      import { Chart } from "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.umd.min.js"
 
       function addRound(win, white) {
         history.innerHTML += `<img src="/images/${win ? white ? "white" : "win" : "loss"}.webp" width="100" height="50" />`
