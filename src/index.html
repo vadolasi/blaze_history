@@ -133,7 +133,9 @@
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
       </div>
-      <canvas id="graph"></canvas>
+      <div style="height: 300px">
+        <canvas id="graph"></canvas>
+      </div>
       <div id="history"></div>
     </div>
     <script type="module">
@@ -184,10 +186,10 @@
         let total = 0
 
         const chartData = entries.map((entry, index) => {
-          const value = total + (entry.win ? 1 : -1)
+          total += (entry.win ? 1 : -1)
           return {
             x: index,
-            y: value
+            y: total
           }
         })
 
@@ -195,6 +197,8 @@
 
         const chart = new Chart(ctx, {
           type: "line",
+          responsive: true,
+          maintainAspectRatio: false,
           data: {
             datasets: [
               {
@@ -212,7 +216,7 @@
                 type: "linear",
                 position: "bottom"
               }
-            }
+            },
           }
         })
       }
