@@ -187,8 +187,10 @@
         document.querySelector("#win").style.width = `${winsPercentage}%`
         document.querySelector("#loss").style.width = `${100 - winsPercentage}%`
 
+        let total = 0
+
         const chartData = entries.map((entry, index) => {
-          const value = entry.win ? 1 : -1
+          const value = total + (entry.win ? 1 : -1)
           return {
             x: index,
             y: value
