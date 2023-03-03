@@ -197,14 +197,14 @@
           }
         })
 
-        const ctx = document.getElementById("graph").getContext("2d")
+        const ctx = document.getElementById("graph")
 
         const chart = new Chart(ctx, {
           type: "line",
           data: {
             datasets: [
               {
-                label: "Ganancias",
+                label: "Wins",
                 data: chartData,
                 backgroundColor: "rgba(255, 99, 132, 0.2)",
                 borderColor: "rgba(255, 99, 132, 1)",
