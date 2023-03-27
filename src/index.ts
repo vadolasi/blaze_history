@@ -23,10 +23,39 @@ app.get("/entries", async (req, res) => {
       id: "desc"
     }
   })
+  const savedMaxConsecutiveWins = await prisma.entry.aggregate({
+    _max: {
+      sequence: true
+    },
+    where: {
+      win: true
+    },
+    take: quantity
+  })
+  const savedMaxConsecutiveLoses = await prisma.entry.aggregate({
+    _max: {
+      sequence: true
+    },
+    where: {
+      win: false
+    },
+    take: quantity
+  })
 
   entries.reverse()
 
-  res.json(entries)
+  let maxConsecutiveWins = 1
+  let maxConsecutiveLoses = 1
+
+  if (savedMaxConsecutiveWins._max?.sequence) {
+    maxConsecutiveWins = savedMaxConsecutiveWins._max.sequence + 1
+  }
+
+  if (savedMaxConsecutiveLoses._max?.sequence) {
+    maxConsecutiveLoses = savedMaxConsecutiveLoses._max.sequence + 1
+  }
+
+  res.json({ entries, maxConsecutiveWins, maxConsecutiveLoses })
 })
 
 app.get("/images/:name", async (req, res) => {
@@ -55,13 +84,26 @@ io.on("connection", (socket) => {
 
   scrapper.listen(
     async (white, win) => {
+      const last = await prisma.entry.findFirst({
+        orderBy: {
+          id: "desc"
+        }
+      })
+
+      let sequence = 0
+
+      if (last && last.win === win) {
+        sequence = last.sequence + 1
+      }
+
       await prisma.entry.create({
         data: {
           white,
-          win
+          win,
+          sequence
         }
       })
-      io.emit("result", { white, win })
+      io.emit("result", { white, win, sequence })
     },
     (red, black) => {
       io.emit("graph", { red, black })

@@ -150,34 +150,13 @@
 
       let previousChart = null
 
-      function mountEntries(entries) {
+      let savedMaxConsecutiveWins = 0
+      let savedMaxConsecutiveLosses = 0
+
+      function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses) {
+        savedMaxConsecutiveLosses = maxConsecutiveLosses
+        savedMaxConsecutiveWins = maxConsecutiveWins
         entriesSaved = entries
-        const wins = entries.filter(entry => entry.win === true).length
-        const winsPercentage = wins / entries.length * 100
-        let maxConsecutiveWins = 0
-        let consecutiveWins = 0
-        entries.forEach(entry => {
-          if (entry.win) {
-            consecutiveWins++
-          } else {
-            if (consecutiveWins > maxConsecutiveWins) {
-              maxConsecutiveWins = consecutiveWins
-            }
-            consecutiveWins = 0
-          }
-        })
-        let maxConsecutiveLosses = 0
-        let consecutiveLosses = 0
-        entries.forEach(entry => {
-          if (!entry.win) {
-            consecutiveLosses++
-          } else {
-            if (consecutiveLosses > maxConsecutiveLosses) {
-              maxConsecutiveLosses = consecutiveLosses
-            }
-            consecutiveLosses = 0
-          }
-        })
         document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
         history.innerHTML = ""
@@ -235,7 +214,7 @@
           }
         })
           .then(response => response.json())
-          .then(mountEntries)
+          .then(({ entries, maxConsecutiveWins, maxConsecutiveLoses }) => mountEntries(entries, maxConsecutiveWins, maxConsecutiveLoses))
       }
 
       filter()
@@ -265,10 +244,15 @@
         document.querySelector("#black").style.width = `${blackPercent}%`
       })
 
-      socket.on("result", ({ white, win }) => {
-        addRound(win, white)
+      socket.on("result", ({ white, win, sequence }) => {
         entriesSaved.push({ white, win })
-        mountEntries(entriesSaved)
+        if (win) {
+          savedMaxConsecutiveWins = Math.max(savedMaxConsecutiveWins, sequence)
+        } else {
+          savedMaxConsecutiveLosses = Math.max(savedMaxConsecutiveLosses, sequence)
+        }
+
+        mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses)
         const lastEntries = entriesSaved.slice(-Number(document.getElementById("beep").value))
         const lastEntry = entriesSaved[entriesSaved.length - 1].win
         const lastEntriesAreEqual = lastEntries.every(entry => entry.win === lastEntry)

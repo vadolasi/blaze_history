@@ -11,4 +11,5 @@ model Entry {
   id        Int      @id @default(autoincrement())
   white     Boolean
   win       Boolean
+  sequence  Int
 }
