@@ -383,8 +383,19 @@
           return
         }
 
-        const patternListToCompare = entriesSaved.slice(entriesSavedLength - patternListLength, entriesSavedLength)
-        const patternRepeated = verificaSequencia(patternList, patternListToCompare)
+        const lastEntries = entriesSaved.slice(entriesSavedLength - patternListLength).map(({ win, white }) => {
+          if (win) {
+            if (white) {
+              return "white"
+            } else {
+              return "win"
+            }
+          } else {
+            return "loss"
+          }
+        })
+
+        const patternRepeat = verificaSequencia(patternList, lastEntries)
 
         if (patternRepeat > 0 % Number(patternQuantity.value)) {
           patternRepeat++
