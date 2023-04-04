@@ -366,7 +366,7 @@
           document.getElementById("patternRepeat").innerText = patternRepeat
         }
 
-        if (patternRepeat % Number(document.getElementById("patternQuantity").value) === 0) {
+        if (patternListLength > 0 && patternRepeat % Number(document.getElementById("patternQuantity").value) === 0) {
           const audio = new Audio("/images/beep.mp3")
           audio.play()
         }
