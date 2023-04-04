@@ -376,19 +376,19 @@
 
         mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses, savedMaxConsecutiveWinsWithoutWhite)
 
-        // veridy if patternList ocours in initial of entriesSaved
-
         const patternListLength = patternList.length
         const entriesSavedLength = entriesSaved.length
 
         if (patternListLength > entriesSavedLength) {
           return
         }
+
         const patternListToCompare = entriesSaved.slice(entriesSavedLength - patternListLength, entriesSavedLength)
-        const patternRepeat = verificaSequencia(patternList, patternListToCompare)
-        document.getElementById("patternRepeat").innerText = patternRepeat
+        const patternRepeated = verificaSequencia(patternList, patternListToCompare)
 
         if (patternRepeat > 0 % Number(patternQuantity.value)) {
+          patternRepeat++
+          document.getElementById("patternRepeat").innerText = patternRepeat
           const audio = new Audio("/images/beep.mp3")
           audio.play()
         }
