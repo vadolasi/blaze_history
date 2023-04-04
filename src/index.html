@@ -379,11 +379,11 @@
         const patternListLength = patternList.length
         const entriesSavedLength = entriesSaved.length
 
-        if (patternListLength > entriesSavedLength) {
+        if (entriesSavedLength < patternListLength) {
           return
         }
 
-        const lastEntries = entriesSaved.slice(entriesSavedLength - patternListLength).map(({ win, white }) => {
+        const lastEntries = [...entriesSaved].slice(entriesSavedLength - patternListLength).map(({ win, white }) => {
           if (win) {
             if (white) {
               return "white"
@@ -395,11 +395,14 @@
           }
         })
 
-        const patternRepeat = patternList.filter((pattern, index) => pattern === lastEntries[index]).length === patternListLength
+        const hasPattern = patternList.every((char, index) => char === lastEntries[index])
 
-        if (patternRepeat % Number(patternQuantity.value)) {
+        if (hasPattern) {
           patternRepeat++
           document.getElementById("patternRepeat").innerText = patternRepeat
+        }
+
+        if (hasPattern && patternRepeat % Number(patternQuantity.value) === 0) {
           const audio = new Audio("/images/beep.mp3")
           audio.play()
         }
