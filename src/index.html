@@ -217,6 +217,18 @@
       let savedMaxConsecutiveWinsWithoutWhite = 0
 
       function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
+        patternRepeat = verificaSequencia(patternList, entries.map(({ win, white }) => {
+          if (win) {
+            if (white) {
+              return "white"
+            } else {
+              return "win"
+            }
+          } else {
+            return "loss"
+          }
+        }))
+        document.getElementById("patternRepeat").innerText = patternRepeat
         savedMaxConsecutiveLosses = maxConsecutiveLosses
         savedMaxConsecutiveWins = maxConsecutiveWins
         savedMaxConsecutiveWinsWithoutWhite = maxConsecutiveWinsWithoutWhite
@@ -313,6 +325,22 @@
       const history = document.getElementById("history")
 
       const socket = io()
+
+      function verificaSequencia(sequencia, array) {
+        let i = 0
+        let contador = 0
+        let window = array.slice(0, sequencia.length)
+        for (let j = sequencia.length; j <= array.length; j++) {
+          if (window.every((char, index) => char === sequencia[index])) {
+            contador++
+          }
+          if (j < array.length) {
+            window.shift()
+            window.push(array[j])
+          }
+        }
+        return contador
+      }
 
       socket.on("connect", () => {
         console.log("Conectado")
