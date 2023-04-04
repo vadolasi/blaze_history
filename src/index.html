@@ -395,9 +395,9 @@
           }
         })
 
-        const patternRepeat = verificaSequencia(patternList, lastEntries)
+        const patternRepeat = patternList.filter((pattern, index) => pattern === lastEntries[index]).length === patternListLength
 
-        if (patternRepeat > 0 % Number(patternQuantity.value)) {
+        if (patternRepeat % Number(patternQuantity.value)) {
           patternRepeat++
           document.getElementById("patternRepeat").innerText = patternRepeat
           const audio = new Audio("/images/beep.mp3")
