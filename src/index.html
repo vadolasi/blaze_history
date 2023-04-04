@@ -180,6 +180,7 @@
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
         <span>Max. vitórias sem branco consecutivas: <span id="maxConsecutiveWinsWithoutWhite"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
+        <span>Repetição do padrão: <span id="patternRepeat"></span></span>
       </div>
       <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
         <canvas id="graph"></canvas>
@@ -362,6 +363,7 @@
 
         if (patternListIsSmallerThanLastEntries && lastEntriesMatchPatternList) {
           patternRepeat++
+          document.getElementById("patternRepeat").innerText = patternRepeat
         }
 
         if (patternRepeat % Number(document.getElementById("patternQuantity").value) === 0) {
