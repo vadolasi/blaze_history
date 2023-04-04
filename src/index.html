@@ -166,11 +166,19 @@
         <label for="quantity">Número de giros:</label>
         <input type="number" min="0" step="1" id="quantity" name="quantity" value="100" />
         <button id="filter">Filtrar</button>
-        <label for="beep">Alerta sonoro: </label>
-        <input type="number" min="0" step="1" id="beep" name="beep" value="7" />
+        <ul id="pattern"></ul>
+        <button id="addPattern">Adicionar</button>
+        <select id="patternSelect">
+          <option value="win">Win</option>
+          <option value="loss">Loss</option>
+          <option value="white">White</option>
+        </select>
+        <label for="patternQuantity">Informe a quantidade de repitição do padrão para notificar:</label>
+        <input type="number" min="0" step="1" id="patternQuantity" name="patternQuantity" value="1" />
       </div>
       <div id="stats">
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
+        <span>Max. vitórias sem branco consecutivas: <span id="maxConsecutiveWinsWithoutWhite"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
       </div>
       <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
@@ -181,6 +189,21 @@
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
 
+      const patternList = []
+      let patternRepeat = 0
+
+      document.getElementById("addPattern").addEventListener("click", () => {
+        const patternSelect = document.getElementById("patternSelect")
+        const patternQuantity = document.getElementById("patternQuantity")
+        const pattern = document.getElementById("pattern")
+        const option = patternSelect.options[patternSelect.selectedIndex].value
+        const quantity = patternQuantity.value
+        const li = document.createElement("li")
+        li.innerText = option
+        pattern.appendChild(li)
+        patternList.push(option)
+      })
+
       let red = 0
       let black = 0
 
@@ -190,13 +213,16 @@
 
       let savedMaxConsecutiveWins = 0
       let savedMaxConsecutiveLosses = 0
+      let savedMaxConsecutiveWinsWithoutWhite = 0
 
-      function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses) {
+      function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
         savedMaxConsecutiveLosses = maxConsecutiveLosses
         savedMaxConsecutiveWins = maxConsecutiveWins
+        savedMaxConsecutiveWinsWithoutWhite = maxConsecutiveWinsWithoutWhite
         entriesSaved = entries
         document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
+        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = maxConsecutiveWinsWithoutWhite
         history.innerHTML = ""
         let html = ""
         entries.forEach(({ win, white }) => {
@@ -274,7 +300,9 @@
           }
         })
           .then(response => response.json())
-          .then(({ entries, maxConsecutiveWins, maxConsecutiveLoses }) => mountEntries(entries, maxConsecutiveWins, maxConsecutiveLoses))
+          .then(({ entries, maxConsecutiveWins, maxConsecutiveLoses, maxConsecutiveWinsWithoutWhite }) => {
+            mountEntries(entries, maxConsecutiveWins, maxConsecutiveLoses, maxConsecutiveWinsWithoutWhite)
+          })
       }
 
       filter()
@@ -304,7 +332,7 @@
         document.querySelector("#black").style.width = `${blackPercent}%`
       })
 
-      socket.on("result", ({ white, win, sequence }) => {
+      socket.on("result", ({ white, win, sequence, sequenceWithoutWhite }) => {
         entriesSaved.push({ white, win })
         if (win) {
           savedMaxConsecutiveWins = Math.max(savedMaxConsecutiveWins, sequence)
@@ -312,11 +340,31 @@
           savedMaxConsecutiveLosses = Math.max(savedMaxConsecutiveLosses, sequence)
         }
 
-        mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses)
-        const lastEntries = entriesSaved.slice(-Number(document.getElementById("beep").value))
-        const lastEntry = entriesSaved[entriesSaved.length - 1].win
-        const lastEntriesAreEqual = lastEntries.every(entry => entry.win === lastEntry)
-        if (lastEntriesAreEqual) {
+        if (win && !white) {
+          savedMaxConsecutiveWinsWithoutWhite = Math.max(savedMaxConsecutiveWinsWithoutWhite, sequenceWithoutWhite)
+        }
+
+        mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses, savedMaxConsecutiveWinsWithoutWhite)
+
+        const patternListLength = patternList.length
+        const lastEntriesLength = entriesSaved.length
+        const patternListIsSmallerThanLastEntries = patternListLength <= lastEntriesLength
+        const lastEntriesMatchPatternList = patternListIsSmallerThanLastEntries && patternList.every((pattern, index) => {
+          const lastEntry = entriesSaved[lastEntriesLength - patternListLength + index]
+          if (pattern === "win") {
+            return lastEntry.win
+          } else if (pattern === "loss") {
+            return !lastEntry.win
+          } else if (pattern === "white") {
+            return lastEntry.white
+          }
+        })
+
+        if (patternListIsSmallerThanLastEntries && lastEntriesMatchPatternList) {
+          patternRepeat++
+        }
+
+        if (patternRepeat % Number(document.getElementById("patternQuantity").value) === 0) {
           const audio = new Audio("/images/beep.mp3")
           audio.play()
         }
