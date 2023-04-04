@@ -193,9 +193,10 @@
       const patternList = []
       let patternRepeat = 0
 
+      const patternQuantity = document.getElementById("patternQuantity")
+
       document.getElementById("addPattern").addEventListener("click", () => {
         const patternSelect = document.getElementById("patternSelect")
-        const patternQuantity = document.getElementById("patternQuantity")
         const pattern = document.getElementById("pattern")
         const option = patternSelect.options[patternSelect.selectedIndex].value
         const quantity = patternQuantity.value
@@ -375,26 +376,19 @@
 
         mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses, savedMaxConsecutiveWinsWithoutWhite)
 
+        // veridy if patternList ocours in initial of entriesSaved
+
         const patternListLength = patternList.length
-        const lastEntriesLength = entriesSaved.length
-        const patternListIsSmallerThanLastEntries = patternListLength <= lastEntriesLength
-        const lastEntriesMatchPatternList = patternListIsSmallerThanLastEntries && patternList.every((pattern, index) => {
-          const lastEntry = entriesSaved[lastEntriesLength - patternListLength + index]
-          if (pattern === "win") {
-            return lastEntry.win
-          } else if (pattern === "loss") {
-            return !lastEntry.win
-          } else if (pattern === "white") {
-            return lastEntry.white
-          }
-        })
+        const entriesSavedLength = entriesSaved.length
 
-        if (patternListIsSmallerThanLastEntries && lastEntriesMatchPatternList) {
-          patternRepeat++
-          document.getElementById("patternRepeat").innerText = patternRepeat
+        if (patternListLength > entriesSavedLength) {
+          return
         }
+        const patternListToCompare = entriesSaved.slice(entriesSavedLength - patternListLength, entriesSavedLength)
+        const patternRepeat = verificaSequencia(patternList, patternListToCompare)
+        document.getElementById("patternRepeat").innerText = patternRepeat
 
-        if (patternListLength > 0 && patternRepeat % Number(document.getElementById("patternQuantity").value) === 0) {
+        if (patternRepeat > 0 % Number(patternQuantity.value)) {
           const audio = new Audio("/images/beep.mp3")
           audio.play()
         }
