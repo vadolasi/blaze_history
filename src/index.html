@@ -180,7 +180,7 @@
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
         <span>Max. vitórias sem branco consecutivas: <span id="maxConsecutiveWinsWithoutWhite"></span></span>
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
-        <span>Repetição do padrão: <span id="patternRepeat">0</span></span>
+        <span>Repetição max. do padrão: <span id="patternRepeat">0</span></span>
       </div>
       <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
         <canvas id="graph"></canvas>
@@ -218,7 +218,7 @@
       let savedMaxConsecutiveWinsWithoutWhite = 0
 
       function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
-        patternRepeat = verificaSequencia(patternList, entries.map(({ win, white }) => {
+        const formettedEntries = entries.map(({ win, white }) => {
           if (win) {
             if (white) {
               return "white"
@@ -228,8 +228,9 @@
           } else {
             return "loss"
           }
-        }))
-        document.getElementById("patternRepeat").innerText = patternRepeat
+        })
+        patternRepeat = verificaSequencia(patternList, formettedEntries)
+        document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         savedMaxConsecutiveLosses = maxConsecutiveLosses
         savedMaxConsecutiveWins = maxConsecutiveWins
         savedMaxConsecutiveWinsWithoutWhite = maxConsecutiveWinsWithoutWhite
@@ -327,20 +328,43 @@
 
       const socket = io()
 
-      function verificaSequencia(sequencia, array) {
-        let i = 0
-        let contador = 0
-        let window = array.slice(0, sequencia.length)
-        for (let j = sequencia.length; j <= array.length; j++) {
-          if (window.every((char, index) => char === sequencia[index])) {
-            contador++
+      function verificaSequencia(subarray, array) {
+        const failureTable = [0]
+        let j = 0
+        for (let i = 1; i < subarray.length; i++) {
+          while (j > 0 && subarray[j] !== subarray[i]) {
+            j = failureTable[j - 1]
           }
-          if (j < array.length) {
-            window.shift()
-            window.push(array[j])
+          if (subarray[j] === subarray[i]) {
+            j++
+          }
+          failureTable[i] = j
+        }
+
+        let maxCount = 0
+        let count = 0
+        let i = 0
+        j = 0
+        while (i < array.length) {
+          if (array[i] === subarray[j]) {
+            i++
+            j++
+            count++
+            if (j === subarray.length) {
+              maxCount = Math.max(maxCount, count)
+              j = failureTable[j - 1]
+            }
+          } else {
+            if (j > 0) {
+              j = failureTable[j - 1]
+            } else {
+              i++
+              count = 0
+            }
           }
         }
-        return contador
+
+        return Math.floor(maxCount / subarray.length) + 1
       }
 
       socket.on("connect", () => {
