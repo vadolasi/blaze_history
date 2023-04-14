@@ -175,6 +175,13 @@
         </select>
         <label for="patternQuantity">Informe a quantidade de repitição do padrão para notificar:</label>
         <input type="number" min="0" step="1" id="patternQuantity" name="patternQuantity" value="1" />
+        <ul id="negativePattern"></ul>
+        <button id="addNegativePattern">Adicionar</button>
+        <select id="negativePatternSelect">
+          <option value="win">Win</option>
+          <option value="loss">Loss</option>
+          <option value="white">White</option>
+        </select>
       </div>
       <div id="stats">
         <span>Max. vitórias consecutivas: <span id="maxConsecutiveWins"></span></span>
@@ -206,6 +213,19 @@
         patternList.push(option)
       })
 
+      const negativePatternList = []
+
+      document.getElementById("addNegativePattern").addEventListener("click", () => {
+        const negativePatternSelect = document.getElementById("negativePatternSelect")
+        const negativePattern = document.getElementById("negativePattern")
+        const option = negativePatternSelect.options[negativePatternSelect.selectedIndex].value
+        const quantity = patternQuantity.value
+        const li = document.createElement("li")
+        li.innerText = option
+        negativePattern.appendChild(li)
+        negativePatternList.push(option)
+      })
+
       let red = 0
       let black = 0
 
@@ -217,7 +237,7 @@
       let savedMaxConsecutiveLosses = 0
       let savedMaxConsecutiveWinsWithoutWhite = 0
 
-      function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
+      async function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
         const formettedEntries = entries.map(({ win, white }) => {
           if (win) {
             if (white) {
@@ -229,7 +249,7 @@
             return "loss"
           }
         })
-        patternRepeat = verificaSequencia(patternList, formettedEntries)
+        patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries) - getMaxSequentialOccurrence(negativePatternList, [patternList], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         savedMaxConsecutiveLosses = maxConsecutiveLosses
         savedMaxConsecutiveWins = maxConsecutiveWins
@@ -328,44 +348,26 @@
 
       const socket = io()
 
-      function verificaSequencia(subarray, array) {
-        const failureTable = [0]
-        let j = 0
-        for (let i = 1; i < subarray.length; i++) {
-          while (j > 0 && subarray[j] !== subarray[i]) {
-            j = failureTable[j - 1]
-          }
-          if (subarray[j] === subarray[i]) {
-            j++
-          }
-          failureTable[i] = j
-        }
-
-        let maxCount = 0
+      function getMaxSequentialOccurrence(subarray, negatives, array) {
+        const subarrayLength = subarray.length
+        const arrayLength = array.length
         let count = 0
-        let i = 0
-        j = 0
-        while (i < array.length) {
-          if (array[i] === subarray[j]) {
-            i++
-            j++
+
+        for (let i = 0; i < arrayLength - subarrayLength; i++) {
+          const arrayToCheck = array.slice(i, i + subarrayLength)
+
+          if (arrayToCheck.every((value, index) => value === subarray[index])) {
             count++
-            if (j === subarray.length) {
-              maxCount = Math.max(maxCount, count)
-              j = failureTable[j - 1]
-            }
-          } else {
-            if (j > 0) {
-              j = failureTable[j - 1]
-            } else {
-              i++
-              count = 0
-            }
           }
         }
 
-        return Math.floor(maxCount / subarray.length) + 1
+        return count
       }
+
+      console.log(getMaxSequentialOccurrence(["w", "w"], [["l", "v"], ["v"]], ["w", "w", "v", "w", "w", "w", "w", "l", "v", "w", "w"])); // Expected output: 2
+      console.log(getMaxSequentialOccurrence(["w", "w"], [], ["w", "w", "w", "v", "w", "w", "w"])); // Expected output: 1
+      console.log(getMaxSequentialOccurrence(["w", "w"], [["v"]], ["w", "w", "l", "w", "w", "w", "w", "l", "v", "w", "w"])); // Expected output: 3
+      console.log(getMaxSequentialOccurrence(["w", "w"], [["v"]], ["w", "w", "w", "w", "v", "v", "w", "w", "w"])); // Expected output: 2
 
       socket.on("connect", () => {
         console.log("Conectado")

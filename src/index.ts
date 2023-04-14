@@ -10,9 +10,15 @@ const prisma = new PrismaClient()
 const app = new Server()
 
 const html = readFileSync("./src/index.html")
+const worker = readFileSync("./src/worker.js")
 
 app.get("/", async (_req, res) => {
   res.send(html)
+})
+
+app.get("/worker.js", async (_req, res) => {
+  res.setHeader("Content-Type", "text/javascript")
+  res.send(worker)
 })
 
 app.get("/entries", async (req, res) => {
@@ -107,15 +113,15 @@ io.on("connection", (socket) => {
         }
       })
 
-      let sequence = 0
+      let sequence = 1
 
       if (last && last.win === win) {
         sequence = last.sequence + 1
       }
 
-      let sequenceWithoutWhite = 0
+      let sequenceWithoutWhite = 1
 
-      if (last && last.win === win && !last.white) {
+      if (last && last.win && !last.white) {
         sequenceWithoutWhite = last.sequenceWithoutWhite + 1
       }
 

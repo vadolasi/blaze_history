@@ -13,4 +13,6 @@ model Entry {
   win                  Boolean
   sequence             Int
   sequenceWithoutWhite Int
+  blackPercentage      Float
+  redPercentage        Float
 }
