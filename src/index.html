@@ -406,7 +406,6 @@
         const arrayLength = array.length
         let sequances = [0]
         negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.map(negative => negative.toString()))).flat(2)
-        console.log(JSON.stringify(negatives))
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
@@ -417,7 +416,7 @@
 
           const arrayToCheckString = arrayToCheck.toString()
 
-          if (negatives.some(negative => negatives.some(negative => arrayToCheckString.includes(negative.toString())))) {
+          if (negatives.some(negative => arrayToCheckString.includes(negative.toString()))) {
             sequances.push(0)
           }
         }
