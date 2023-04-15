@@ -56,7 +56,7 @@ export class Scrapper {
   async init() {
     const browser = await chromium.launch({ args })
     this.page = await browser.newPage({ viewport: { width: 375, height: 812 } })
-    await this.page.route('**/*', (route) => {
+    await this.page.route("**/*", (route) => {
       return block_resources.includes(route.request().resourceType())
         ? route.abort()
         : route.continue()

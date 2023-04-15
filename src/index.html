@@ -186,6 +186,10 @@
           <option value="win">Win</option>
           <option value="loss">Loss</option>
           <option value="white">White</option>
+          <option value="win,loss">Win ou Loss</option>
+          <option value="win,white">Win ou White</option>
+          <option value="loss,white">Loss ou White</option>
+          <option value="win,loss,white">Win, Loss ou White</option>
         </select>
         <label for="patternQuantity">Informe a quantidade de repitição do padrão para notificar:</label>
         <input type="number" min="0" step="1" id="patternQuantity" name="patternQuantity" value="1" />
@@ -195,6 +199,10 @@
           <option value="win">Win</option>
           <option value="loss">Loss</option>
           <option value="white">White</option>
+          <option value="win,loss">Win ou Loss</option>
+          <option value="win,white">Win ou White</option>
+          <option value="loss,white">Loss ou White</option>
+          <option value="win,loss,white">Win, Loss ou White</option>
         </select>
       </div>
       <div id="stats">
@@ -263,16 +271,16 @@
             return "loss"
           }
         })
-        patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries)
+        patternRepeat = getMaxSequentialOccurrence(patternList.map(item => item.split(",")), [negativePatternList], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         entriesSaved = entries
         document.getElementById("maxConsecutiveWins").innerText = Math.max(
           getMaxSequentialOccurrence(["white"], [["loss"]], formettedEntries),
           getMaxSequentialOccurrence(["win"], [["loss"]], formettedEntries)
         )
-        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
-        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence(["win"], [["loss"], ["white"]], formettedEntries)
-        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
+        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence([["loss"]], ["win"], [["white"]], formettedEntries)
+        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence([["win"]], [["loss"], ["white"]], formettedEntries)
+        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence([["loss"]], [["win"], ["white"]], formettedEntries)
         history.innerHTML = ""
         let html = ""
         entries.forEach(({ win, white, redPercentage, blackPercentage }) => {
@@ -373,6 +381,23 @@
 
       const socket = io()
 
+      function generateCombinations(arr) {
+        if (arr.length === 0) {
+          return [[]]
+        } else {
+          const first = arr[0]
+          const rest = arr.slice(1)
+          const combinationsWithoutFirst = generateCombinations(rest)
+          const combinationsWithFirst = []
+          for (let i = 0; i < first.length; i++) {
+            for (let j = 0; j < combinationsWithoutFirst.length; j++) {
+              combinationsWithFirst.push([first[i], ...combinationsWithoutFirst[j]])
+            }
+          }
+          return combinationsWithFirst
+        }
+      }
+
       function getMaxSequentialOccurrence(subarray, negatives, array) {
         if (!array || !subarray.length) {
           return 0
@@ -380,18 +405,18 @@
         const subarrayLength = subarray.length
         const arrayLength = array.length
         let sequances = [0]
-        negatives = negatives.map(negative => negative.toString())
+        negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.toString()))
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
 
-          if (arrayToCheck.every((value, index) => value === subarray[index])) {
+          if (arrayToCheck.every((value, index) => subarray[index].includes(value))) {
             sequances[sequances.length - 1]++
           }
 
           const arrayToCheckString = arrayToCheck.toString()
 
-          if (negatives.some(negative => negative.includes(arrayToCheckString))) {
+          if (negatives.some(negative => negatives.some(negative => arrayToCheckString.includes(negative.toString())))) {
             sequances.push(0)
           }
         }

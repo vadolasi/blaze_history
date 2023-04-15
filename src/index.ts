@@ -10,15 +10,9 @@ const prisma = new PrismaClient()
 const app = new Server()
 
 const html = readFileSync("./src/index.html")
-const worker = readFileSync("./src/worker.js")
 
 app.get("/", async (_req, res) => {
   res.send(html)
-})
-
-app.get("/worker.js", async (_req, res) => {
-  res.setHeader("Content-Type", "text/javascript")
-  res.send(worker)
 })
 
 app.get("/entries", async (req, res) => {
