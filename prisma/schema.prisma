@@ -15,4 +15,5 @@ model Entry {
   sequenceWithoutWhite Int
   blackPercentage      Float
   redPercentage        Float
+  type                 String
 }

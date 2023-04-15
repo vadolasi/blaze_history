@@ -193,6 +193,11 @@
         <canvas id="graph"></canvas>
       </div>
       <div id="history"></div>
+      <select>
+        <option value="users">Win</option>
+        <option value="blaze">Loss</option>
+        <option value="white">White</option>
+      </select>
     </div>
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
@@ -249,13 +254,13 @@
             return "loss"
           }
         })
-        patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries) - getMaxSequentialOccurrence(negativePatternList, [patternList], formettedEntries)
+        patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         savedMaxConsecutiveLosses = maxConsecutiveLosses
         savedMaxConsecutiveWins = maxConsecutiveWins
         savedMaxConsecutiveWinsWithoutWhite = maxConsecutiveWinsWithoutWhite
         entriesSaved = entries
-        document.getElementById("maxConsecutiveWins").innerText = maxConsecutiveWins
+        document.getElementById("maxConsecutiveWins").innerText = getMaxSequentialOccurrence(entries)
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
         document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = maxConsecutiveWinsWithoutWhite
         history.innerHTML = ""
@@ -351,23 +356,25 @@
       function getMaxSequentialOccurrence(subarray, negatives, array) {
         const subarrayLength = subarray.length
         const arrayLength = array.length
-        let count = 0
+        let sequances = [0]
+        negatives = negatives.map(negative => negative.toString())
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
 
           if (arrayToCheck.every((value, index) => value === subarray[index])) {
-            count++
+            sequances[sequances.length - 1]++
+          }
+
+          const arrayToCheckString = arrayToCheck.toString()
+
+          if (negatives.some(negative => negative.includes(arrayToCheckString))) {
+            sequances.push(0)
           }
         }
 
-        return count
+        return Math.max(...sequances)
       }
-
-      console.log(getMaxSequentialOccurrence(["w", "w"], [["l", "v"], ["v"]], ["w", "w", "v", "w", "w", "w", "w", "l", "v", "w", "w"])); // Expected output: 2
-      console.log(getMaxSequentialOccurrence(["w", "w"], [], ["w", "w", "w", "v", "w", "w", "w"])); // Expected output: 1
-      console.log(getMaxSequentialOccurrence(["w", "w"], [["v"]], ["w", "w", "l", "w", "w", "w", "w", "l", "v", "w", "w"])); // Expected output: 3
-      console.log(getMaxSequentialOccurrence(["w", "w"], [["v"]], ["w", "w", "w", "w", "v", "v", "w", "w", "w"])); // Expected output: 2
 
       socket.on("connect", () => {
         console.log("Conectado")
