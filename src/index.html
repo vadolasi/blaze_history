@@ -383,18 +383,20 @@
 
       function generateCombinations(arr) {
         if (arr.length === 0) {
-          return [[]]
+          return [[]];
         } else {
-          const first = arr[0]
-          const rest = arr.slice(1)
-          const combinationsWithoutFirst = generateCombinations(rest)
-          const combinationsWithFirst = []
+          const first = arr[0];
+          const rest = arr.slice(1);
+          const combinationsWithoutFirst = generateCombinations(rest);
+          const combinationsWithFirst = [];
           for (let i = 0; i < first.length; i++) {
             for (let j = 0; j < combinationsWithoutFirst.length; j++) {
-              combinationsWithFirst.push([first[i], ...combinationsWithoutFirst[j]])
+              const combination = [first[i], ...combinationsWithoutFirst[j]];
+              const joinedCombination = combination.join(",");
+              combinationsWithFirst.push(joinedCombination);
             }
           }
-          return combinationsWithFirst
+          return combinationsWithFirst;
         }
       }
 
@@ -405,7 +407,7 @@
         const subarrayLength = subarray.length
         const arrayLength = array.length
         let sequances = [0]
-        negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.map(negative => negative.toString()))).flat(2)
+        negatives = generateCombinations(negatives)
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
@@ -416,7 +418,7 @@
 
           const arrayToCheckString = arrayToCheck.toString()
 
-          if (negatives.some(negative => arrayToCheckString.includes(negative.toString()))) {
+          if (negatives.some(negative => arrayToCheckString.includes(negative))) {
             sequances.push(0)
           }
         }
