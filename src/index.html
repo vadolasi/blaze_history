@@ -190,9 +190,8 @@
         <span>Repetição max. do padrão: <span id="patternRepeat">0</span></span>
       </div>
       <select>
-        <option value="users">Win</option>
-        <option value="blaze">Loss</option>
-        <option value="white">White</option>
+        <option value="users">Maior quantidade de apostas</option>
+        <option value="blaze">Lucro da blaze</option>
       </select>
       <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
         <canvas id="graph"></canvas>
@@ -256,11 +255,14 @@
         })
         patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
-        savedMaxConsecutiveLosses = maxConsecutiveLosses
-        savedMaxConsecutiveWins = maxConsecutiveWins
-        savedMaxConsecutiveWinsWithoutWhite = maxConsecutiveWinsWithoutWhite
+        savedMaxConsecutiveLosses = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
+        savedMaxConsecutiveWins = getMaxSequentialOccurrence(["win"], [["loss"], ["white"]], formettedEntries)
+        savedMaxConsecutiveWinsWithoutWhite = Math.max(
+          getMaxSequentialOccurrence(["white"], [["loss"]], formettedEntries),
+          getMaxSequentialOccurrence(["win"], [["loss"]], formettedEntries)
+        )
         entriesSaved = entries
-        document.getElementById("maxConsecutiveWins").innerText = getMaxSequentialOccurrence(entries)
+        document.getElementById("maxConsecutiveWins").innerText = savedMaxConsecutiveWins
         document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
         document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = maxConsecutiveWinsWithoutWhite
         history.innerHTML = ""
