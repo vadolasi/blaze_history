@@ -80,7 +80,7 @@ export class Scrapper {
     return Number(total.split(" ")[0])
   }
 
-  async listen(callback: (white: boolean, win: boolean) => void, onGraph: (red: number, black: number) => void) {
+  async listen(callback: (white: boolean, win: boolean, redPercentage: number, blackPercentage: number) => void, onGraph: (red: number, black: number) => void) {
     this.page.exposeFunction("onGraph", onGraph)
 
     this.page.evaluate(() => {
@@ -102,6 +102,19 @@ export class Scrapper {
       const red = await this.getRedValue()
       const black = await this.getBlackValue()
 
+      const [redPercentage, blackPercentage] = await this.page.evaluate(() => {
+        const red = document.querySelector("div.col-md-4.col-xs-12.margin-xs.left div.total > div:nth-child(1)")
+        const black = document.querySelector("div.col-md-4.col-xs-12.right div.total > div:nth-child(1)")
+
+        const redNumber = Number(red!.textContent!.split(" ")[0])
+        const blackNumber = Number(black!.textContent!.split(" ")[0])
+
+        const redPercentage = redNumber / (redNumber + blackNumber) * 100
+        const blackPercentage = blackNumber / (redNumber + blackNumber) * 100
+
+        return [Number(redPercentage.toFixed(2)), Number(blackPercentage.toFixed(2))]
+      })
+
       if (red && black) {
         let win = false
         let white = false
@@ -115,7 +128,7 @@ export class Scrapper {
           win = true
         }
 
-        callback(white, win)
+        callback(white, win, redPercentage, blackPercentage)
       }
 
       await this.page.waitForTimeout(10000)

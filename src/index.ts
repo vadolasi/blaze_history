@@ -23,62 +23,16 @@ app.get("/worker.js", async (_req, res) => {
 
 app.get("/entries", async (req, res) => {
   const quantity = Number(req.query.quantity)
-  const [entries, savedMaxConsecutiveWins, savedMaxConsecutiveLoses, savedMaxConsecutiveWinsWithoutWhite] = await prisma.$transaction([
-    prisma.entry.findMany({
-      take: quantity,
-      orderBy: {
-        id: "desc"
-      }
-    }),
-    prisma.entry.aggregate({
-      _max: {
-        sequence: true
-      },
-      where: {
-        win: true
-      },
-      take: quantity
-    }),
-    prisma.entry.aggregate({
-      _max: {
-        sequence: true
-      },
-      where: {
-        win: false
-      },
-      take: quantity
-    }),
-    prisma.entry.aggregate({
-      _max: {
-        sequenceWithoutWhite: true
-      },
-      where: {
-        win: true,
-        white: false
-      },
-      take: quantity
-    })
-  ])
+  const entries = await prisma.entry.findMany({
+    take: quantity,
+    orderBy: {
+      id: "desc"
+    }
+  })
 
   entries.reverse()
 
-  let maxConsecutiveWins = 1
-  let maxConsecutiveLoses = 1
-  let maxConsecutiveWinsWithoutWhite = 1
-
-  if (savedMaxConsecutiveWins._max?.sequence) {
-    maxConsecutiveWins = savedMaxConsecutiveWins._max.sequence + 1
-  }
-
-  if (savedMaxConsecutiveLoses._max?.sequence) {
-    maxConsecutiveLoses = savedMaxConsecutiveLoses._max.sequence + 1
-  }
-
-  if (savedMaxConsecutiveWinsWithoutWhite._max?.sequenceWithoutWhite) {
-    maxConsecutiveWinsWithoutWhite = savedMaxConsecutiveWinsWithoutWhite._max.sequenceWithoutWhite + 1
-  }
-
-  res.json({ entries, maxConsecutiveWins, maxConsecutiveLoses, maxConsecutiveWinsWithoutWhite })
+  res.json({ entries })
 })
 
 app.get("/images/:name", async (req, res) => {
@@ -106,34 +60,17 @@ io.on("connection", (socket) => {
   console.log("Listening on port 3000")
 
   scrapper.listen(
-    async (white, win) => {
-      const last = await prisma.entry.findFirst({
-        orderBy: {
-          id: "desc"
-        }
-      })
-
-      let sequence = 1
-
-      if (last && last.win === win) {
-        sequence = last.sequence + 1
-      }
-
-      let sequenceWithoutWhite = 1
-
-      if (last && last.win && !last.white) {
-        sequenceWithoutWhite = last.sequenceWithoutWhite + 1
-      }
-
+    async (white, win, redPercentage, blackPercentage) => {
       await prisma.entry.create({
         data: {
           white,
           win,
-          sequence,
-          sequenceWithoutWhite
+          redPercentage,
+          blackPercentage,
+          type: "most"
         }
       })
-      io.emit("result", { white, win, sequence, sequenceWithoutWhite })
+      io.emit("result", { white, win, redPercentage, blackPercentage })
     },
     (red, black) => {
       io.emit("graph", { red, black })

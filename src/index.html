@@ -149,6 +149,20 @@
         text-align: center;
         font-weight: bold;
       }
+
+      .item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .item span {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: smaller;
+        margin: 10px;
+        color: white;
+      }
     </style>
     <title>Gráfico</title>
   </head>
@@ -189,10 +203,6 @@
         <span>Max. derrotas consecutivas: <span id="maxConsecutiveLosses"></span></span>
         <span>Repetição max. do padrão: <span id="patternRepeat">0</span></span>
       </div>
-      <select>
-        <option value="users">Maior quantidade de apostas</option>
-        <option value="blaze">Lucro da blaze</option>
-      </select>
       <div style="height: 300px; width: 500px; display: flex; align-items: center; justify-content: center;">
         <canvas id="graph"></canvas>
       </div>
@@ -241,7 +251,7 @@
       let savedMaxConsecutiveLosses = 0
       let savedMaxConsecutiveWinsWithoutWhite = 0
 
-      async function mountEntries(entries, maxConsecutiveWins, maxConsecutiveLosses, maxConsecutiveWinsWithoutWhite) {
+      async function mountEntries(entries) {
         const formettedEntries = entries.map(({ win, white }) => {
           if (win) {
             if (white) {
@@ -255,27 +265,35 @@
         })
         patternRepeat = getMaxSequentialOccurrence(patternList, [negativePatternList], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
-        savedMaxConsecutiveLosses = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
-        savedMaxConsecutiveWins = getMaxSequentialOccurrence(["win"], [["loss"], ["white"]], formettedEntries)
-        savedMaxConsecutiveWinsWithoutWhite = Math.max(
+        entriesSaved = entries
+        document.getElementById("maxConsecutiveWins").innerText = Math.max(
           getMaxSequentialOccurrence(["white"], [["loss"]], formettedEntries),
           getMaxSequentialOccurrence(["win"], [["loss"]], formettedEntries)
         )
-        entriesSaved = entries
-        document.getElementById("maxConsecutiveWins").innerText = savedMaxConsecutiveWins
-        document.getElementById("maxConsecutiveLosses").innerText = maxConsecutiveLosses
-        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = maxConsecutiveWinsWithoutWhite
+        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
+        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence(["win"], [["loss"], ["white"]], formettedEntries)
+        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence(["loss"], [["win"], ["white"]], formettedEntries)
         history.innerHTML = ""
         let html = ""
-        entries.forEach(({ win, white }) => {
+        entries.forEach(({ win, white, redPercentage, blackPercentage }) => {
+          const span = `${Math.max(redPercentage, blackPercentage)}% ${redPercentage > blackPercentage ? "red" : "black"}`
           if (win) {
             if (white) {
-              html += `<span class="white">White</span>`
+              html += `<span class="item white">
+                White
+                <span>${span}</span>
+              </span>`
             } else {
-              html += `<span class="win">Win</span>`
+              html += `<span class="item win">
+                Win
+                <span>${span}</span>
+              </span>`
             }
           } else {
-            html += `<span class="loss">Loss</span>`
+            html += `<span class="item loss">
+              Loss
+              <span>${span}</span>
+            </span>`
           }
         })
 
@@ -390,29 +408,20 @@
       })
 
       socket.on("graph", ({ red, black }) => {
-        const redPercent = red / (red + black) * 100
-        const blackPercent = black / (red + black) * 100
+        const redPercentage = red / (red + black) * 100
+        const blackPercentage = black / (red + black) * 100
 
-        document.querySelector("#red span").innerText = `${redPercent.toFixed(2)}%`
-        document.querySelector("#black span").innerText = `${blackPercent.toFixed(2)}%`
+        document.querySelector("#red span").innerText = `${redPercentage.toFixed(2)}%`
+        document.querySelector("#black span").innerText = `${blackPercentage.toFixed(2)}%`
 
-        document.querySelector("#red").style.width = `${redPercent}%`
-        document.querySelector("#black").style.width = `${blackPercent}%`
+        document.querySelector("#red").style.width = `${redPercentage}%`
+        document.querySelector("#black").style.width = `${blackPercentage}%`
       })
 
-      socket.on("result", ({ white, win, sequence, sequenceWithoutWhite }) => {
-        entriesSaved.push({ white, win })
-        if (win) {
-          savedMaxConsecutiveWins = Math.max(savedMaxConsecutiveWins, sequence)
-        } else {
-          savedMaxConsecutiveLosses = Math.max(savedMaxConsecutiveLosses, sequence)
-        }
+      socket.on("result", ({ white, win, redPercentage, blackPercentage }) => {
+        entriesSaved.push({ white, win, redPercentage, blackPercentage })
 
-        if (win && !white) {
-          savedMaxConsecutiveWinsWithoutWhite = Math.max(savedMaxConsecutiveWinsWithoutWhite, sequenceWithoutWhite)
-        }
-
-        mountEntries(entriesSaved, savedMaxConsecutiveWins, savedMaxConsecutiveLosses, savedMaxConsecutiveWinsWithoutWhite)
+        mountEntries(entriesSaved)
 
         const patternListLength = patternList.length
         const entriesSavedLength = entriesSaved.length
