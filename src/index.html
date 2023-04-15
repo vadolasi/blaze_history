@@ -426,7 +426,7 @@
         const patternListLength = patternList.length
         const entriesSavedLength = entriesSaved.length
 
-        if (entriesSavedLength < patternListLength) {
+        if (entriesSavedLength < patternListLength || patternListLength === 0) {
           return
         }
 
