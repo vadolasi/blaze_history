@@ -354,7 +354,7 @@
       const socket = io()
 
       function getMaxSequentialOccurrence(subarray, negatives, array) {
-        if (!subarray.length) {
+        if (!array || !subarray.length) {
           return 0
         }
         const subarrayLength = subarray.length
