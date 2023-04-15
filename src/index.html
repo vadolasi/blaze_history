@@ -271,16 +271,16 @@
             return "loss"
           }
         })
-        patternRepeat = getMaxSequentialOccurrence(patternList.map(item => item.split(",")), [negativePatternList], formettedEntries)
+        patternRepeat = getMaxSequentialOccurrence(patternList.map(item => item.split(",")), [[negativePatternList.map(item => item.split(","))]], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         entriesSaved = entries
         document.getElementById("maxConsecutiveWins").innerText = Math.max(
-          getMaxSequentialOccurrence(["white"], [["loss"]], formettedEntries),
-          getMaxSequentialOccurrence(["win"], [["loss"]], formettedEntries)
+          getMaxSequentialOccurrence([["white"]], [[["loss"]]], formettedEntries),
+          getMaxSequentialOccurrence([["win"]], [[["loss"]]], formettedEntries)
         )
-        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence([["loss"]], ["win"], [["white"]], formettedEntries)
-        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence([["win"]], [["loss"], ["white"]], formettedEntries)
-        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence([["loss"]], [["win"], ["white"]], formettedEntries)
+        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence([["loss"]], [[["win"], ["white"]]], formettedEntries)
+        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence([["win"]], [[["loss"], ["white"]]], formettedEntries)
+        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence([["loss"]], [[["win"], ["white"]]], formettedEntries)
         history.innerHTML = ""
         let html = ""
         entries.forEach(({ win, white, redPercentage, blackPercentage }) => {
@@ -405,7 +405,8 @@
         const subarrayLength = subarray.length
         const arrayLength = array.length
         let sequances = [0]
-        negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.toString()))
+        negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.map(negative => negative.toString()))).flat(2)
+        console.log(JSON.stringify(negatives))
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
