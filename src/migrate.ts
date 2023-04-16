@@ -9,7 +9,7 @@ const db = new sqlite.Database("saved-data.db")
 
 db.serialize(() => {
   db.all("SELECT * FROM Entry", async (err, rows) => {
-    await prisma.entry.deleteMany()
+    await prisma.entry.deleteMany({})
 
     for (const data of rows) {
       const row = data as { id: number, white: number, win: number }
