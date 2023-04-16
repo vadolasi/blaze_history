@@ -71,5 +71,3 @@ io.on("connection", (socket) => {
     }
   )
 })()
-
-app.listen(3000)

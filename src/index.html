@@ -271,16 +271,12 @@
             return "loss"
           }
         })
-        patternRepeat = getMaxSequentialOccurrence(patternList.map(item => item.split(",")), [[negativePatternList.map(item => item.split(","))]], formettedEntries)
+        patternRepeat = getMaxSequentialOccurrence(patternList.map(item => item.split(",")), [negativePatternList.map(item => item.split(","))], formettedEntries)
         document.getElementById("patternRepeat").innerText = `~ ${patternRepeat}`
         entriesSaved = entries
-        document.getElementById("maxConsecutiveWins").innerText = Math.max(
-          getMaxSequentialOccurrence([["white"]], [[["loss"]]], formettedEntries),
-          getMaxSequentialOccurrence([["win"]], [[["loss"]]], formettedEntries)
-        )
-        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence([["loss"]], [[["win"], ["white"]]], formettedEntries)
-        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence([["win"]], [[["loss"], ["white"]]], formettedEntries)
-        savedMaxConsecutiveWinsWithoutWhite = getMaxSequentialOccurrence([["loss"]], [[["win"], ["white"]]], formettedEntries)
+        document.getElementById("maxConsecutiveWins").innerText = getMaxSequentialOccurrence([["win", "white"]], [[[["loss"]]]], formettedEntries)
+        document.getElementById("maxConsecutiveLosses").innerText = getMaxSequentialOccurrence([["loss"]], [[[["win"], ["white"]]]], formettedEntries)
+        document.getElementById("maxConsecutiveWinsWithoutWhite").innerText = getMaxSequentialOccurrence([["win"]], [[[["loss"], ["white"]]]], formettedEntries)
         history.innerHTML = ""
         let html = ""
         entries.forEach(({ win, white, redPercentage, blackPercentage }) => {
@@ -381,33 +377,51 @@
 
       const socket = io()
 
-      function generateCombinations(arr) {
-        if (arr.length === 0) {
-          return [[]];
-        } else {
-          const first = arr[0];
-          const rest = arr.slice(1);
-          const combinationsWithoutFirst = generateCombinations(rest);
-          const combinationsWithFirst = [];
-          for (let i = 0; i < first.length; i++) {
-            for (let j = 0; j < combinationsWithoutFirst.length; j++) {
-              const combination = [first[i], ...combinationsWithoutFirst[j]];
-              const joinedCombination = combination.join(",");
-              combinationsWithFirst.push(joinedCombination);
+      function generateAllPossibilities(numbers) {
+        const result = [[]]
+
+        for (let i = 0; i < numbers.length; i++) {
+          const currentNumber = numbers[i];
+          const currentPossibilities = [];
+
+          for (let j = 0; j < result.length; j++) {
+            const currentPossibility = result[j];
+
+            for (let k = 0; k < currentNumber; k++) {
+              currentPossibilities.push([...currentPossibility, k])
             }
           }
-          return combinationsWithFirst;
+
+          result.splice(0, result.length, ...currentPossibilities)
         }
+
+        return result;
+      }
+
+      function generateCombinations(arrays, currentCombo = []) {
+        if (arrays.length === 0) {
+          return [currentCombo];
+        }
+
+        const currentArray = arrays[0];
+        const remainingArrays = arrays.slice(1);
+
+        const combinations = [];
+        for (let i = 0; i < currentArray.length; i++) {
+          const nextCombo = [...currentCombo, currentArray[i]];
+          const nextCombinations = generateCombinations(remainingArrays, nextCombo);
+          combinations.push(...nextCombinations);
+        }
+
+        return combinations;
       }
 
       function getMaxSequentialOccurrence(subarray, negatives, array) {
-        if (!array || !subarray.length) {
-          return 0
-        }
         const subarrayLength = subarray.length
         const arrayLength = array.length
         let sequances = [0]
-        negatives = generateCombinations(negatives)
+        negatives = negatives.map(negative => generateCombinations(negative).map(negative => negative.join(","))).flat()
+        console.log(JSON.stringify(negatives))
 
         for (let i = 0; i < arrayLength - subarrayLength; i++) {
           const arrayToCheck = array.slice(i, i + subarrayLength)
